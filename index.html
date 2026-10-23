@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مورس</title>
+<link href="https://fonts.googleapis.com/css2?family=Readex+Pro:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f2f4f5; --surface:#fff; --line:#dde2e5; --ink:#26303a; --muted:#6b7782; --accent:#4f7a78; --accent-hover:#436866; --on-accent:#fff; }
+  .dark { --bg:#13171a; --surface:#1b2024; --line:#2a3138; --ink:#e4e8eb; --muted:#8c97a1; --accent:#7fa9a6; --accent-hover:#93b9b6; --on-accent:#0f1416; }
+  *, *::before, *::after { box-sizing:border-box; }
+  html { -webkit-text-size-adjust:100%; }
+  body { margin:0; min-height:100vh; font-family:'Readex Pro',system-ui,-apple-system,'Segoe UI',Tahoma,sans-serif; background:var(--bg); color:var(--ink); transition:background-color .3s,color .3s; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px); }
+  button, textarea, select { font:inherit; }
+  button { cursor:pointer; background:none; border:0; color:inherit; }
+  main { max-width:32rem; margin:0 auto; padding:2.5rem 1.25rem; }
+  header { display:flex; align-items:center; justify-content:space-between; margin-bottom:2rem; }
+  h1 { margin:0; font-size:1.5rem; font-weight:600; }
+  .surface { background:var(--surface); border:1px solid var(--line); border-radius:1.25rem; padding:1.25rem; }
+  .muted { color:var(--muted); }
+  .btn, .btn-line, .btn-quiet { display:block; border-radius:.875rem; padding:.85rem 1rem; text-align:center; }
+  .btn { background:var(--accent); color:var(--on-accent); font-weight:600; transition:background-color .2s; }
+  .btn:hover:not(:disabled) { background:var(--accent-hover); }
+  .btn-line { border:1px solid var(--line); color:var(--ink); transition:border-color .2s,color .2s; }
+  .btn-line:hover { border-color:var(--accent); color:var(--accent); }
+  .btn-quiet { color:var(--muted); font-size:.875rem; padding:.5rem .75rem; transition:color .2s; }
+  .btn-quiet:hover { color:var(--ink); }
+  .tabs { display:flex; gap:1.5rem; margin-bottom:1rem; border-bottom:1px solid var(--line); }
+  .tab { padding:.6rem 0; color:var(--muted); border-bottom:2px solid transparent; margin-bottom:-1px; transition:color .2s,border-color .2s; }
+  .tab[aria-selected="true"] { color:var(--ink); border-color:var(--accent); }
+  label { display:block; font-size:.875rem; color:var(--muted); margin-bottom:.5rem; }
+  textarea, select { display:block; width:100%; padding:1rem; font-size:1rem; background:var(--bg); border:1px solid var(--line); border-radius:.875rem; color:var(--ink); }
+  textarea { resize:none; }
+  textarea::placeholder { color:var(--muted); opacity:.7; }
+  textarea:focus, select:focus { outline:none; border-color:var(--accent); }
+  button:focus-visible { outline:2px solid var(--accent); outline-offset:3px; }
+  .row { display:flex; gap:.5rem; }
+  .row > * { flex:1; }
+  .mt { margin-top:1rem; }
+  .result { min-height:6rem; background:var(--bg); border:1px solid var(--line); border-radius:.875rem; padding:1rem; overflow-wrap:anywhere; white-space:pre-wrap; unicode-bidi:plaintext; text-align:start; letter-spacing:.08em; }
+  [hidden] { display:none !important; }
+  .site-credit { margin-top:2rem; padding:1rem 0; text-align:center; color:var(--muted); font-size:.7rem; border-top:1px solid var(--line); opacity:.75; }
+  .site-credit span { color:var(--accent); font-weight:500; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>مترجم مورس</h1>
+    <button id="themeBtn" class="btn-quiet"></button>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button id="tab1" class="tab" role="tab" aria-selected="true">نص إلى مورس</button>
+    <button id="tab2" class="tab" role="tab" aria-selected="false">مورس إلى نص</button>
+  </div>
+
+  <section class="surface">
+    <label for="inp" id="inl">النص</label>
+    <textarea id="inp" rows="4" dir="auto"></textarea>
+
+    <div id="langBox" class="mt" hidden>
+      <label for="lang">لغة النص الناتج</label>
+      <select id="lang"><option value="ar">العربية</option><option value="en">English</option></select>
+    </div>
+
+    <div class="muted mt" style="font-size:.875rem;margin-bottom:.5rem">النتيجة</div>
+    <div id="out" class="result" dir="auto"></div>
+
+    <div class="row mt">
+      <button id="copy" class="btn">نسخ النتيجة</button>
+      <button id="clear" class="btn-line">مسح</button>
+    </div>
+    <p id="hint" class="muted" style="font-size:.875rem;text-align:center;margin:.75rem 0 0"></p>
+  </section>
+
+  <footer class="site-credit">
+    Made by <span>younes</span>
+  </footer>
+</main>
+
+<script>
+const EN={A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..',
+'0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.',
+'.':'.-.-.-',',':'--..--','?':'..--..','!':'-.-.--',':':'---...','-':'-....-','/':'-..-.','(':'-.--.',')':'-.--.-','@':'.--.-.','=':'-...-','+':'.-.-.','"':'.-..-.',"'":'.----.'};
+const AR={'ا':'.-','ب':'-...','ت':'-','ث':'-.-.','ج':'.---','ح':'....','خ':'---','د':'-..','ذ':'--..','ر':'.-.','ز':'---.','س':'...','ش':'----','ص':'-..-','ض':'...-','ط':'..-','ظ':'-.--','ع':'.-.-','غ':'--.','ف':'..-.','ق':'--.-','ك':'-.-','ل':'.-..','م':'--','ن':'-.','ه':'..-..','و':'.--','ي':'..'};
+const NORM={'أ':'ا','إ':'ا','آ':'ا','ٱ':'ا','ى':'ي','ة':'ه','ؤ':'و','ئ':'ي','ـ':''};
+const DIG='٠١٢٣٤٥٦٧٨٩';
+const ENrev={},ARrev={};
+for(const k in EN)ENrev[EN[k]]=k;
+for(const k in AR)ARrev[AR[k]]=k;
+const $=id=>document.getElementById(id);
+let mode=1;
+
+let unsupportedChars=[];
+function toMorse(t){
+  unsupportedChars=[];
+  t=t.replace(/[\u064B-\u065F\u0670\u06D6-\u06ED]/g,'');
+  return t.split(/\s+/).filter(Boolean).map(w=>{
+    return [...w].map(c=>{
+      const i=DIG.indexOf(c); if(i>-1)c=String(i);
+      c=NORM[c]!==undefined?NORM[c]:c;
+      if(!c)return '';
+      const code=AR[c]||EN[c.toUpperCase()];
+      if(!code){if(!unsupportedChars.includes(c))unsupportedChars.push(c);return '';}
+      return code;
+    }).filter(Boolean).join(' ');
+  }).filter(Boolean).join(' / ');
+}
+function fromMorse(m,lang){
+  const map=lang==='ar'?ARrev:ENrev;
+  m=m.replace(/[•·]/g,'.').replace(/[−–—_]/g,'-');
+  return m.split(/\s*\/\s*|\s{3,}|\n/).map(w=>
+    w.trim().split(/\s+/).filter(Boolean).map(s=>
+      /^[.-]+$/.test(s)?(map[s]||(lang==='ar'?ENrev[s]:ARrev[s])||'؟'):'؟'
+    ).join('')
+  ).filter(Boolean).join(' ');
+}
+function run(){
+  const v=$('inp').value;
+  $('out').textContent=mode===1?toMorse(v):fromMorse(v,$('lang').value);
+  if(mode===1 && unsupportedChars.length){
+    $('hint').textContent='لم يتم تحويل هذه الأحرف لعدم دعمها: '+unsupportedChars.join(' ');
+  }else{
+    $('hint').textContent=mode===1?'الحروف تُفصل بمسافة، والكلمات بـ /':'استخدم . و - ومسافة بين الحروف، و / بين الكلمات';
+  }
+}
+function setMode(m){
+  mode=m;
+  $('tab1').setAttribute('aria-selected',m===1);
+  $('tab2').setAttribute('aria-selected',m===2);
+  $('inl').textContent=m===1?'النص':'كود مورس';
+  $('inp').placeholder=m===1?'اكتب هنا...':'.... .. / ... ... ...';
+  $('langBox').hidden=m===1;
+  $('hint').textContent=m===1?'الحروف تُفصل بمسافة، والكلمات بـ /':'استخدم . و - ومسافة بين الحروف، و / بين الكلمات';
+  $('inp').value='';$('out').textContent='';
+}
+$('tab1').onclick=()=>setMode(1);
+$('tab2').onclick=()=>setMode(2);
+$('inp').oninput=run;
+$('lang').onchange=run;
+$('clear').onclick=()=>{$('inp').value='';$('out').textContent='';$('inp').focus()};
+$('copy').onclick=async()=>{
+  const b=$('copy'),o=b.textContent;
+  try{
+    if(!navigator.clipboard || !navigator.clipboard.writeText) throw new Error('Clipboard API unavailable');
+    await navigator.clipboard.writeText($('out').textContent);
+    b.textContent='تم النسخ ✓';
+  }catch(e){
+    $('hint').textContent='تعذّر النسخ. تحقق من أذونات المتصفح أو استخدم النسخ اليدوي.';
+    return;
+  }
+  setTimeout(()=>{if(b.textContent==='تم النسخ ✓')b.textContent=o;},1200);
+};
+const store={get(k,d){try{const v=localStorage.getItem(k);return v===null?d:v}catch{return d}},set(k,v){try{localStorage.setItem(k,v)}catch{}}};
+function applyTheme(dark){document.documentElement.classList.toggle('dark',dark);$('themeBtn').textContent=dark?'الوضع الفاتح':'الوضع الداكن';store.set('theme',dark?'dark':'light')}
+applyTheme(store.get('theme',matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light')==='dark');
+$('themeBtn').onclick=()=>applyTheme(!document.documentElement.classList.contains('dark'));
+setMode(1);
+</script>
+</body>
+</html>
